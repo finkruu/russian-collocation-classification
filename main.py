@@ -50,16 +50,18 @@ def prepare_all_features(df, ft_model):
     y = df['Attribute'].values
     
     features = {
+        "Pure RuBERT": X_bert, # <--- ДОБАВЛЕНО: чистый RuBERT для контрольной группы
         "RuBERT + MI/logDice": np.hstack([X_bert, X_metrics]),
         "Static Mean (fastText)": X_fasttext,
-        "A-only (Adjective)": X_bert,
-        "N-only (Noun)": X_bert,
+        "A-only (Adjective)": X_bert, # Примечание: сейчас использует вектор всего предложения
+        "N-only (Noun)": X_bert,      # Примечание: сейчас использует вектор всего предложения
         "Stats Only (MI/logDice)": X_metrics
     }
     return features, y
 
 def run():
     if not os.path.exists(INPUT_FILE):
+        print(f"Файл {INPUT_FILE} не найден.")
         return
 
     df = pd.read_pickle(INPUT_FILE)
@@ -68,6 +70,7 @@ def run():
     splits = create_custom_splits(df)
     
     models_to_test = [
+        "Pure RuBERT", # <--- ДОБАВЛЕНО В СПИСОК
         "RuBERT + MI/logDice", 
         "Static Mean (fastText)", 
         "A-only (Adjective)", 
@@ -95,6 +98,7 @@ def run():
             macro_f1 = f1_score(y_test, y_pred, average='macro', zero_division=0)
             results_table[model_name].append(macro_f1)
 
+    # Красивый вывод таблицы в формате Markdown
     print(f"| Модель | {' | '.join(split_names)} |")
     print(f"|---|{'---|' * len(split_names)}")
     for model_name in models_to_test:
